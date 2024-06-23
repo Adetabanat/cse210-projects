@@ -20,7 +20,7 @@ namespace JournalApp
                 Console.WriteLine("4. Load the journal from a file");
                 Console.WriteLine("5. Exit");
                 Console.Write("Choose an option: ");
-                
+
                 if (int.TryParse(Console.ReadLine(), out int choice))
                 {
                     switch (choice)
@@ -84,12 +84,13 @@ namespace JournalApp
 
         public string ToFileString()
         {
-            return $"{Date}|{Mood}|{Prompt}|{Response}|{Location}|{Tags}";
+            // CSV format: Date,Mood,Prompt,Response,Location,Tags
+            return $"{Date},{Mood},{Prompt},{Response},{Location},{Tags}";
         }
 
         public static JournalEntry FromFileString(string fileString)
         {
-            var parts = fileString.Split('|');
+            var parts = fileString.Split(',');
             string location = parts.Length > 4 ? parts[4] : "";
             string tags = parts.Length > 5 ? parts[5] : "";
             return new JournalEntry(parts[2], parts[3], parts[1], location, tags) { Date = parts[0] };
@@ -126,7 +127,7 @@ namespace JournalApp
             string location = Console.ReadLine();
             Console.Write("Enter tags (comma-separated): ");
             string tags = Console.ReadLine();
-            
+
             JournalEntry entry = new JournalEntry(prompt, response, mood, location, tags);
             _entries.Add(entry);
         }
@@ -148,6 +149,7 @@ namespace JournalApp
                     writer.WriteLine(entry.ToFileString());
                 }
             }
+            Console.WriteLine("Journal saved to file.");
         }
 
         public void LoadFromFile(string filename)
@@ -160,6 +162,7 @@ namespace JournalApp
                 {
                     _entries.Add(JournalEntry.FromFileString(line));
                 }
+                Console.WriteLine("Journal loaded from file.");
             }
             else
             {
