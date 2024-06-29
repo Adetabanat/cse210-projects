@@ -15,6 +15,13 @@ public class Reference
         VerseStart = verseStart;
         VerseEnd = verseEnd;
     }
+
+    public override string ToString()
+    {
+        return VerseEnd.HasValue 
+            ? $"{Book} {Chapter}:{VerseStart}-{VerseEnd}" 
+            : $"{Book} {Chapter}:{VerseStart}";
+    }
 }
 
 public class Word
@@ -25,36 +32,28 @@ public class Word
     public Word(string text)
     {
         Text = text;
-        Hidden = false;  // Words are initially not hidden
-    }
-
-    public void Hide()
-    {
-        Hidden = true;
-    }
-
-    public void Show()
-    {
         Hidden = false;
     }
 
-    public override string ToString()
-    {
-        return Hidden ? "_____" : Text;
-    }
+    public void Hide() => Hidden = true;
+
+    public void Show() => Hidden = false;
+
+    public override string ToString() => Hidden ? "_____" : Text;
 }
 
 public class Scripture
 {
     private Reference Reference { get; set; }
     private List<Word> Words { get; set; }
+    private string Context { get; set; }
 
-    public Scripture(Reference reference, string verseText)
+    public Scripture(Reference reference, string verseText, string context)
     {
         Reference = reference;
+        Context = context;
         Words = new List<Word>();
-        string[] words = verseText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        foreach (var word in words)
+        foreach (var word in verseText.Split(' ', StringSplitOptions.RemoveEmptyEntries))
         {
             Words.Add(new Word(word));
         }
@@ -63,59 +62,79 @@ public class Scripture
     public void HideRandomWord()
     {
         Random random = new Random();
-        int index = random.Next(Words.Count);
+        int index;
+        do
+        {
+            index = random.Next(Words.Count);
+        } while (Words[index].Hidden);
+
         Words[index].Hide();
+    }
+
+    public void HideWordsByPercentage(int percentage)
+    {
+        int wordsToHide = Words.Count * percentage / 100;
+        Random random = new Random();
+        for (int i = 0; i < wordsToHide; i++)
+        {
+            int index;
+            do
+            {
+                index = random.Next(Words.Count);
+            } while (Words[index].Hidden);
+
+            Words[index].Hide();
+        }
     }
 
     public string Display()
     {
-        // Constructing the scripture display with reference and words
-        string display = $"{Reference.Book} {Reference.Chapter}:{Reference.VerseStart}-{Reference.VerseEnd}\n";
-        foreach (var word in Words)
-        {
-            display += word.ToString() + " ";
-        }
-        return display.Trim();
+        return $"{Reference}\nContext: {Context}\n{string.Join(" ", Words)}";
     }
 
-    public bool AllHidden()
-    {
-        foreach (var word in Words)
-        {
-            if (!word.Hidden)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
+    public bool AllHidden() => Words.TrueForAll(word => word.Hidden);
+
+    public void RevealAllWords() => Words.ForEach(word => word.Show());
 }
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static void Main()
     {
-        // Example usage
-        Reference john316to17Reference = new Reference("John", 3, 16, 17);
-        Scripture john316to17Scripture = new Scripture(john316to17Reference, "For God so loved the world that He gave His only begotten Son, that whoever believes in Him should not perish but have everlasting life.");
-        
+        var john316to17Reference = new Reference("John", 3, 16, 17);
+        var john316to17Scripture = new Scripture(john316to17Reference, 
+            "For God so loved the world that He gave His only begotten Son, that whoever believes in Him should not perish but have everlasting life.", 
+            "This verse highlights God's love for humanity and the promise of eternal life through faith.");
+
         Console.WriteLine("Initial Scripture:");
         Console.WriteLine(john316to17Scripture.Display());
-        
-        // Hide random words until all are hidden
+
+        // Hide a percentage of words for practice
+        john316to17Scripture.HideWordsByPercentage(20);
+        Console.WriteLine("\nMemorization Challenge:");
+        Console.WriteLine(john316to17Scripture.Display());
+
         while (!john316to17Scripture.AllHidden())
         {
-            Console.WriteLine("\nPress Enter to hide a word (or type 'quit' to exit):");
+            Console.WriteLine("\nPress Enter to hide another word, 'reveal' to show all, or type 'quit' to exit:");
             string input = Console.ReadLine();
-            
+
             if (input.ToLower() == "quit")
                 break;
-            
-            john316to17Scripture.HideRandomWord();
-            Console.Clear();
-            Console.WriteLine(john316to17Scripture.Display());
+            else if (input.ToLower() == "reveal")
+            {
+                john316to17Scripture.RevealAllWords();
+                Console.Clear();
+                Console.WriteLine(john316to17Scripture.Display());
+            }
+            else
+            {
+                john316to17Scripture.HideRandomWord();
+                Console.Clear();
+                Console.WriteLine(john316to17Scripture.Display());
+            }
         }
-        
-        Console.WriteLine("\nAll words hidden. Program ended.");
+
+        Console.WriteLine("\nAll words hidden or revealed. Program ended.");
     }
 }
