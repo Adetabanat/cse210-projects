@@ -1,9 +1,23 @@
 using System;
 
-class Program
+namespace MyApplication
 {
-    static void Main(string[] args)
-    {
-        Console.WriteLine("Hello Learning04 World!");
-    }
+   class Program
+   {
+      static void MyMethod(int myNum=4)
+      {
+        Console.WriteLine(myNum);
+      }
+      static void Main(string[] args)
+       {
+        string name = "nat";
+        MyMethod(15);
+        MyMethod();
+        
+
+       
+        Console.WriteLine(name);
+        Console.WriteLine(name   +  "myNum");
+       }
+   }
 }
